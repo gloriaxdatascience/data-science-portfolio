@@ -1,121 +1,187 @@
-# 🍄 Mushroom Classification — Edible vs. Poisonous  
-Deep Learning Project (ResNet18 Transfer Learning)
+# Mushroom Classification — Edible vs. Poisonous
 
-# Deep Learning for Mushroom Identification
+## Deep Learning with Transfer Learning (ResNet18)
 
-## Problem Statement
-Can we automatically classify mushroom images as **edible** or **poisonous** using convolutional neural networks, with a target validation accuracy of at least 85%?
+---
 
-## Business Relevance
-Incorrect mushroom identification can lead to severe poisoning incidents and even fatalities.  
-An image-based classifier can support hobby foragers, emergency triage tools, and educational apps by flagging potentially poisonous mushrooms and visual patterns that are hard for non-experts to distinguish.
+### Problem Statement
+Can we automatically classify mushroom images as edible or poisonous using deep convolutional neural networks, achieving at least **85% validation accuracy**, while minimizing dangerous false negatives?
 
-## Dataset
-- Source: Course-provided mushroom image dataset (Agaricus and Amanita species).
-- Structure: Pre-split into `train`, `validate`, and `test` folders with class subdirectories (`edible/`, `poisonous/`).  
-- Size:
-  - Train: 2,256 images (edible + poisonous).
-  - Validation: 282 images.
-  - Test: 282 images.[file:1]
-- Image type: Color photos of mushrooms in natural conditions with varying lighting, orientation, and background.
+---
 
-## Methods Used
-- Data loading
-  - Custom `SafeImageFolder` with a robust `winsafe_loader` to handle Windows path issues and unreadable images.[file:1]
-- Data preprocessing and augmentation
-  - Resizing to 128×128 and 224×224.
-  - Random horizontal flip, rotation, color jitter, random resized crop, and normalization with ImageNet mean/std.[file:1]
-- Models
-  - Baseline CNN:
-    - 3 conv blocks (Conv–BatchNorm–ReLU–MaxPool) followed by a fully connected head.[file:1]
-  - Transfer Learning:
-    - ResNet18 with ImageNet weights, frozen backbone in Phase A.
-    - Replaced `fc` with Dropout → Linear(512→256) → ReLU → Dropout → Linear(256→2).[file:1]
-- Training strategy
-  - Unified `train_model` loop with:
-    - `copy.deepcopy` best-checkpoint saving by validation accuracy.
-    - StepLR scheduler.
-    - Optional fine-tuning phase.
-  - Two-phase training for ResNet18:
-    - Phase A: Head-only training with frozen backbone.
-    - Phase B: Unfreeze `layer4` + `fc` at a configurable `FINETUNE_EPOCH` with differential learning rates (backbone LR = 1e-4, head LR = 1e-3).[file:1]
-- Evaluation
-  - Accuracy on validation and test sets.
-  - Confusion matrices for best epoch and test set.
-  - Classification reports (precision, recall, F1).
-  - Confidence-based error analysis:
-    - Misclassification grids.
-    - Confidence histograms (correct vs wrong).
-    - Precision–recall vs threshold with a safety-focused threshold for the poisonous class.
-    - ROC curve and AUC for detecting poisonous mushrooms.[file:1]
+### Critical Safety Disclaimer
+**This project is for educational and research purposes only.**
+**The model must NOT be used to determine whether a real mushroom is safe to eat.**
 
-## Results
-- Baseline CNN
-  - Best validation accuracy: ~74%.[file:1]
-  - Demonstrates that the task is learnable but leaves substantial room for improvement.
-- ResNet18 Transfer Learning
-  - Best validation accuracy: ~95% (target 85% exceeded).![file:1]
-  - Test accuracy: ~91% on a held-out test set.[file:1]
-  - Test classification report (approximate):
-    - Edible: precision ~0.89, recall ~0.95.
-    - Poisonous: precision ~0.93, recall ~0.86.
-  - ROC AUC for poisonous detection: ~0.97.[file:1]
+Even with **~91% test accuracy**:
+* The model still produces **false negatives** (poisonous predicted as edible).
+* Some errors occur with **high confidence (>90%)**.
+* The dataset does not cover all mushroom species.
+* Real-world lighting and unseen species may significantly degrade performance.
+* **Mushroom foraging decisions should always be verified by trained experts.**
 
-- Safety-oriented metric
-  - Precision–recall analysis for the poisonous class.
-  - Chosen safety threshold (example): a threshold that reaches ≥95% recall on poisonous mushrooms at the cost of more false positives (edible predicted as poisonous).[file:1]
+---
 
-## Visuals
-- EDA
-  - Bar plots of class distribution per split (train/validate/test) to confirm balanced classes.[file:1]
-  - Sample grids of mushrooms per class and per split.
-- Training curves
-  - Loss and accuracy curves for baseline CNN and ResNet18.
-  - Marked fine-tuning start epoch and 85% target accuracy line.[file:1]
-- Evaluation plots
-  - Confusion matrices for validation and test.
-  - Misclassification grids highlighting:
-    - False negatives (poisonous predicted as edible) in **red**.
-    - False positives (edible predicted as poisonous) in **orange**.[file:1]
-  - Confidence histograms and ROC curve for the poisonous class.
+### Business & Real-World Relevance
+Incorrect mushroom identification can result in severe poisoning and fatalities. An image classifier could potentially assist in:
+* **Educational tools**
+* **Foraging awareness apps**
+* **Emergency triage support systems**
 
-## Lessons Learned
-- Transfer learning from a pretrained ResNet18 significantly outperforms a small CNN when data is limited.
-- Two-phase training (frozen backbone then selective unfreezing) helps stabilize training and avoid catastrophic forgetting.
-- Heavy augmentation is important to reduce overfitting on relatively small mushroom datasets.
-- Safety-focused evaluation (false negatives vs false positives, high-confidence errors) is more informative than accuracy alone for this type of problem.[file:1]
+However, **safety-aware evaluation is essential** — minimizing false negatives is more important than maximizing overall accuracy.
 
-## Failures and Limitations
-- The model still produces **high-confidence** errors, including some false negatives (poisonous predicted as edible), which are dangerous in real-world use.[file:1]
-- Backgrounds, lighting, and occlusion can mislead the model.
-- Dataset is limited in species diversity and real-world variability; results may not generalize to all mushroom types or camera conditions.
+---
 
-## Future Improvements
-- Data
-  - Expand the dataset with more species and real user photos.
-  - Add explicit “unknown / not sure” class for out-of-distribution mushrooms.
-- Modeling
-  - Experiment with more advanced architectures (e.g., ResNet50, EfficientNet, or vision transformers) and ensembling.
-  - Use class-weighted loss or focal loss to penalize false negatives more strongly.
-- Evaluation & Deployment
-  - Calibrate probabilities and expose an abstain option when confidence is low.
-  - Integrate with a simple web or mobile demo to test usability.
-  - Add unit tests for data loaders and a small CLI script to score new images using `models/resnet18_mushroom_best.pth`.[file:1]
+### Dataset
+**Course-provided mushroom image dataset**
+* **Two classes:** edible, poisonous
+* **Pre-split into:**
+    * **Train:** 2,256 images
+    * **Validation:** 282 images
+    * **Test:** 282 images
+* **Balanced classes**
+* Natural outdoor lighting, varied angles, cluttered backgrounds
 
-## Repository Structure
+---
 
+### Methods
+
+#### Baseline CNN
+* 3 Conv–BatchNorm–ReLU–MaxPool blocks
+* Fully connected classifier
+* 128×128 input resolution
+* **Result: ~74% validation accuracy**
+* Demonstrates the task is learnable.
+
+#### Transfer Learning — ResNet18
+* **Architecture:**
+    * Pretrained **ResNet-18**
+    * ImageNet weights
+* **Custom head:**
+    * **Dropout -> Linear(512->256) -> ReLU -> Dropout -> Linear(256->2)**
+* **Two-phase training:**
+    * **Phase A — Frozen Backbone:** Train classifier head only. Fast convergence. Stable learning.
+    * **Phase B — Fine-tuning:** Unfreeze **layer4**.
+    * **Differential learning rates:** Backbone: **1e-4**, Head: **1e-3**. Prevents catastrophic forgetting.
+
+---
+
+### Results
+
+#### Baseline CNN
+* **Best validation accuracy: 74.1%**
+
+#### ResNet18 Transfer Learning
+* **Best validation accuracy: 95.0%**
+* **Test accuracy: 90.8–91%**
+* **ROC AUC (poisonous class): 0.97**
+
+#### Test Classification Report
+| Class | Precision | Recall |
+| :--- | :--- | :--- |
+| **Edible** | 0.89 | 0.95 |
+| **Poisonous** | 0.93 | 0.86 |
+
+---
+
+### Critical Failure Analysis
+**Test set errors:**
+* **26 total misclassifications (9.2%)**
+* **18 false negatives** (poisonous -> edible)
+* **8 false positives** (edible -> poisonous)
+
+**Poisonous Recall: 86.4%**
+This means **~14% of poisonous mushrooms were incorrectly predicted as edible.** This is unacceptable for real-world deployment.
+
+---
+
+### Safety-Oriented Threshold Tuning
+Instead of using default threshold (**0.5**), we optimized for **>=95% recall** on poisonous mushrooms.
+* **Result:** Threshold **~ 0.011**
+* **Poisonous recall: 96.2%**
+* **Precision: 77.4%**
+This significantly reduces dangerous misses but increases false positives. This demonstrates **risk-aware model calibration.**
+
+---
+
+### Grad-CAM — Model Interpretability
+To understand why the model predicts poisonous vs edible, we applied **Grad-CAM (Gradient-weighted Class Activation Mapping).**
+
+Grad-CAM highlights image regions most responsible for the prediction.
+
+**Findings:**
+The model often focuses on:
+* **Gills**
+* **Cap texture**
+* **Stem shape**
+
+Some false negatives occur when:
+* Background dominates attention
+* Lighting reduces texture visibility
+* Occlusions obscure key features
+
+Grad-CAM confirms the model is not purely memorizing backgrounds, but also reveals failure modes.
+
+---
+
+### Evaluation Visualizations
+* Class distribution bar plots
+* Training curves (with fine-tuning marker)
+* **Confusion matrices (validation + test)**
+* **ROC curve (AUC = 0.97)**
+* Precision–Recall vs threshold
+* **Misclassification grids (dangerous errors highlighted in red)**
+* Confidence histograms (correct vs wrong)
+* **Grad-CAM heatmaps**
+
+---
+
+### Lessons Learned
+* **Transfer learning** dramatically improves performance on small datasets.
+* **Differential learning rates** protect pretrained features.
+* **High accuracy does not equal safe deployment.**
+* **Threshold tuning** is essential in safety-critical systems.
+* Interpretability tools like **Grad-CAM** expose hidden model behavior.
+
+---
+
+### Limitations
+* Limited species diversity
+* No **out-of-distribution detection**
+* Some high-confidence errors remain
+* Not validated on real-world user photos
+* **Not medically safe for deployment**
+
+---
+
+### Future Improvements
+* Add **"unknown species"** class
+* Use **focal loss** to penalize false negatives
+* Probability calibration
+* Ensemble models
+* Out-of-distribution detection
+* Larger, more diverse dataset
+
+---
+
+### Repository Structure
 ```text
 .
-├── notebooks/
-│   └── 01_final_model.ipynb      # EDA, baseline CNN, ResNet18, evaluation
-├── src/
-│   ├── data.py                   # SafeImageFolder, path helpers
-│   ├── transforms.py             # Train/val/test transforms
-│   ├── models.py                 # BaselineCNN, ResNet18 factory
-│   ├── train.py                  # Training loop, plotting
-│   ├── evaluate.py               # Confusion matrix, ROC, PR, misclassifications
-│   └── utils.py                  # Seeding, misc helpers
+├── data/
+│   └── raw/
+│       ├── train/
+│       ├── validate/
+│       ├── test/
+│       └── predict/
 ├── models/
-│   └── resnet18_mushroom_best.pth  # Saved best ResNet18 weights
+│   └── resnet18_mushroom_best.pth
+├── notebooks/
+│   ├── 01_final_model.ipynb
+│   └── baseline_history.json
+├── src/
+│   ├── train.py
+│   ├── data.py
+│   ├── models.py
+│   ├── predict.py
+│   └── utils.py
 └── README.md
-
