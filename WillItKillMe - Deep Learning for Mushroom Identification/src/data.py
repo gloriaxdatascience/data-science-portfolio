@@ -1,4 +1,3 @@
-# src/data.py
 import os
 from pathlib import Path
 from PIL import Image
@@ -68,3 +67,14 @@ def get_resnet_transforms():
         transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
     ])
     return train_tf, val_tf
+
+def get_transforms(model_type="resnet"):
+    if model_type == "baseline":
+        _, val_tf = get_baseline_transforms()
+        return val_tf
+    elif model_type == "resnet":
+        _, val_tf = get_resnet_transforms()
+        return val_tf
+    else:
+        raise ValueError(f"Unknown model_type: {model_type}")
+

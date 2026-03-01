@@ -4,6 +4,48 @@
 
 ---
 
+### Interactive Web Demo
+I have developed a local web interface using **Gradio**. 
+To run the demo and classify your own images:
+1. Navigate to the `src/` folder.
+2. Run `python app.py`.
+3. The interface provides:
+   * **Real-time Prediction** (Edible/Poisonous)
+   * **Confidence Scores**
+   * **Grad-CAM Visualizations** (Model Interpretability)
+
+---
+
+## Demo Screenshot
+
+<p align="center">
+  <img src="assets/app_screenshot1.png" width="800">
+</p>
+
+<p align="center">
+  <img src="assets/app_screenshot2.png" width="800">
+</p>
+
+---
+
+### Model Performance Summary
+The final model was selected based on the best validation epoch and evaluated on a held-out test set.
+
+| Metric | Validation (Best Epoch) | Test (Final Evaluation) |
+| :--- | :--- | :--- |
+| **Accuracy** | 95.0% | 91.1% |
+| **Poisonous Recall** | 94.2% | 86.4% |
+| **ROC AUC** | 0.98 | 0.97 |
+
+> **Note on Safety:** While accuracy is high, the model still carries a ~13.6% false negative rate for poisonous mushrooms. This highlights the importance of **Threshold Tuning** for safety-critical applications.
+
+---
+
+### Interpretability (Grad-CAM)
+We utilize **Grad-CAM** to ensure the model focuses on mycological features (gills, cap, stem) rather than background noise. This step is crucial for verifying that the model is learning biological patterns.
+
+---
+
 ### Problem Statement
 Can we automatically classify mushroom images as edible or poisonous using deep convolutional neural networks, achieving at least **85% validation accuracy**, while minimizing dangerous false negatives?
 
@@ -136,6 +178,13 @@ Grad-CAM confirms the model is not purely memorizing backgrounds, but also revea
 
 ---
 
+### 🛠️ How to Use
+1. **Environment:** `conda activate mushroom_311`
+2. **Training:** Run `notebooks/00_mushroom_cnn.ipynb`
+3. **Inference / Web Demo:** Run `python src/app.py`
+
+---
+
 ### Lessons Learned
 * **Transfer learning** dramatically improves performance on small datasets.
 * **Differential learning rates** protect pretrained features.
@@ -183,5 +232,6 @@ Grad-CAM confirms the model is not purely memorizing backgrounds, but also revea
 │   ├── data.py
 │   ├── models.py
 │   ├── predict.py
-│   └── utils.py
+│   ├── utils.py
+│   └── app.py
 └── README.md
