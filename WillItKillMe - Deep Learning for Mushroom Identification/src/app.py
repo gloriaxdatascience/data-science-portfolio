@@ -43,7 +43,7 @@ def predict_and_explain(inp_img):
 # 2. Build the Layout (Top to Bottom)
 with gr.Blocks(theme=gr.themes.Default()) as demo:
     # --- Top Section ---
-    gr.Markdown("# Mushroom Safety Classifier")
+    gr.Markdown("# Will It Kill Me? - Mushroom Safety Classifier")
     gr.Markdown("""
     These metrics are computed on a **held-out test set (282 images)** that was never used during training or model selection.  
     They represent the model’s final real-world generalization performance.
