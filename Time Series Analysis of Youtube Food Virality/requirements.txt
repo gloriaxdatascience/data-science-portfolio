@@ -1,0 +1,2 @@
+git-filter-repo==2.47.0
+PyYAML @ file:///D:/bld/pyyaml_1770223253728/work
