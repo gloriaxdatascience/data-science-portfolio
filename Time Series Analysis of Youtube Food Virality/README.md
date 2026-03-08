@@ -1,75 +1,125 @@
-# 🍳 Viral Cooking Trends on YouTube
+# Viral Cooking Trends on YouTube  
+Time Series Analysis of Rise, Peak, and Decay Patterns
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![YouTube API](https://img.shields.io/badge/YouTube-API-red.svg)](https://developers.google.com/youtube/v3)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+This project analyzes how viral cooking trends spread on YouTube, how quickly they peak, and how long they remain relevant. Using time series modeling, feature engineering, and engagement analysis, the project uncovers lifecycle patterns behind trends like *crookie*, *dirty bread*, *tanghulu*, and more.
 
-A time-series analysis of how cooking trends go viral on YouTube. This project tracks the rise, peak, and decay patterns of food trends like Feta Pasta, Dalgona Coffee, and Birria Tacos.
+---
 
-## 📊 Sample Output
+## 📂 Project Structure
 
-![All Trends Overlay](data/figures/all_trends_overlay.png)
-*Normalized view patterns for 8 viral cooking trends*
+project/
+│
+├── data/
+│   ├── raw/                # Raw YouTube API data
+│   ├── processed/          # Cleaned & engineered datasets
+│   └── figures/            # Generated plots
+│
+├── notebooks/
+│   ├── 01_exploration.ipynb
+│   ├── 02_feature_engineering.ipynb
+│   └── 03_final_analysis.ipynb   # Main report notebook
+│
+├── src/
+│   ├── youtube_api.py      # Data collection
+│   ├── time_series.py      # Daily views + smoothing
+│   ├── features.py         # Feature engineering
+│   └── visualize.py        # Plotting utilities
+│
+├── reports/
+│   └── final_analysis.md   # Summary report
+│
+├── run_pipeline.py         # Optional end‑to‑end pipeline
+└── requirements.txt
 
-## 🎯 Key Questions Answered
+---
 
-- How fast do cooking trends reach their peak?
-- Which trends have the longest "shelf life"?
-- What tags correlate with viral success?
-- Can we predict a trend's shape?
+## 🎯 Goals
 
-## 🏗️ Project Structure
+- Understand how viral cooking trends evolve over time  
+- Identify rise speed, peak intensity, and decay rate  
+- Compare lifecycle shapes across trends  
+- Analyze engagement patterns (likes, comments, velocity)  
+- Extract keyword signals that drive virality  
 
+---
 
-viral-trends/
-├── data/ # Raw and processed data
-├── notebooks/ # Jupyter notebooks for analysis
-├── src/ # Source code
-│ ├── youtube_api.py # Data collection
-│ ├── time_series.py # Time series construction
-│ ├── features.py # Feature engineering
-│ └── visualize.py # Visualization functions
-├── reports/ # Final analysis
-└── requirements.txt # Dependencies
+## 📊 Key Findings
 
+### ⚡ Fastest to Peak  
+**dubai chocolate** — reached peak in **150 days**, with **10.9×** average intensity.
 
-## 🚀 Quick Start
+### 🐢 Longest Lasting  
+**chopped italian sandwich** — half‑life **21 days**, total active **334 days**.
 
-```bash
-# Clone repo
-git clone https://github.com/yourusername/viral-cooking-trends.git
-cd viral-cooking-trends
+### 🔥 Most Intense Peak  
+**dirty bread** — **158×** average daily views, **240M** total views.
 
-# Install dependencies
+### ❤️ Most Engaging  
+**crookie** — engagement rate **1.77**, avg **99k likes/video**.
+
+### 📈 Shape Classification  
+All trends in this dataset follow a **slow rise, fast fall** pattern.
+
+---
+
+## 🧪 Methods
+
+### Time Series Modeling
+- Daily view aggregation  
+- 7‑day exponential smoothing  
+- Peak detection  
+- Velocity and acceleration metrics  
+
+### Feature Engineering
+- Days to peak  
+- Half-life estimation  
+- Peak intensity  
+- Total views  
+- Engagement rate  
+
+### Keyword Analysis
+- Tokenization of video titles  
+- Stopword filtering  
+- Keyword → trend mapping  
+- Engagement-weighted ranking  
+
+---
+
+## 📷 Visualizations
+
+The project generates:
+
+- Trend lifespans  
+- Shape clusters  
+- Keyword impact charts  
+- Engagement lifecycle curves  
+
+All figures are saved to:
+
+data/figures/
+
+---
+
+## ▶️ Running the Project
+
+### Notebook workflow
+Open:
+
+notebooks/00_analysis.ipynb
+
+This runs the full analysis end‑to‑end.
+
+---
+
+## 📦 Installation
+
 pip install -r requirements.txt
 
-# Set up YouTube API key
-echo "YOUTUBE_API_KEY=your_key_here" > .env
 
-# Run the full pipeline
-python run_pipeline.
+---
 
+## 📝 Report
 
-## Trends Analyzed
+A final summary is available at:
 
-
-## Key Findings
-- Speed matters: Trends that peak in <30 days get 3x more total views
-- Tags tell the story: "#easyrecipe" correlates with longer half-lives
-- Engagement leads: Comments peak 5-7 days BEFORE view peak
-- Three shapes: Trends cluster into "spike", "slow burn", and "revival" patterns
-
-## Built With
-- YouTube Data API v3
-- Pandas & NumPy for analysis
-- Matplotlib & Plotly for visualization
-- SciPy for curve fitting
-- Scikit-learn for clustering
-
-## License
-- MIT License - feel free to use this for your portfolio!
-
-## Acknowledgments
-- YouTube for providing the API
-
-
+reports/final_analysis.md

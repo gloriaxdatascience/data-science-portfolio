@@ -94,39 +94,71 @@ class FeatureEngineer:
         
         return pd.DataFrame(features)
     
-    def analyze_tag_impact(self):
-        """Correlate tags with trend characteristics"""
-        tag_impact = []
-        
-        for trend in self.raw_df['trend_name'].unique():
-            trend_raw = self.raw_df[self.raw_df['trend_name'] == trend]
-            trend_peak = self.peaks_df[self.peaks_df['trend_name'] == trend].iloc[0]
-            
-            # Extract all tags for this trend
-            all_tags = []
-            for tags in trend_raw['tags'].dropna():
-                if isinstance(tags, str):
-                    try:
-                        tag_list = eval(tags) if tags.startswith('[') else [tags]
-                        all_tags.extend(tag_list)
-                    except:
-                        all_tags.append(tags)
-            
-            # Count tag frequency
-            tag_counts = pd.Series(all_tags).value_counts()
-            
-            # For top tags, record impact
-            for tag, count in tag_counts.head(10).items():
-                tag_impact.append({
-                    'tag': tag,
-                    'trend': trend,
-                    'frequency': count,
-                    'peak_views': trend_peak['peak_views'],
-                    'half_life': trend_peak['half_life_days'],
-                    'days_to_peak': trend_peak['days_to_peak']
+    def analyze_keyword_impact(self):
+        """Analyze keyword frequency and impact from video titles"""
+        import re
+
+        # These are words that appear in titles but tell us nothing trend-specific
+        STOPWORDS = {
+            'a','an','the','and','or','in','on','at','to','for','of','is','it','its',
+            'this','that','with','how','make','making','made','i','my','you','your',
+            'me','we','our','are','was','be','do','did','get','got','can','will',
+            'video','youtube','shorts','viral','food','recipe','recipes','cooking',
+            'cook','cooked','trying','tried','try','eat','eating','ate','taste',
+            'tasting','watch','new','best','good','real','just','so','the','what',
+            'more','all','its','but','not','have','has','from','out','one','top',
+            'first','last','ever'
+        }
+
+        rows = []
+        for _, row in self.raw_df.iterrows():
+            text = str(row.get('title', ''))
+            tokens = re.findall(r"[a-z]{3,}", text.lower())
+            keywords = [t for t in tokens if t not in STOPWORDS]
+
+            for kw in set(keywords):  # set = count each keyword once per video
+                rows.append({
+                    'keyword': kw,
+                    'trend': row['trend_name'],
+                    'like_count': row['like_count'],
+                    'comment_count': row['comment_count']
                 })
-        
-        return pd.DataFrame(tag_impact)
+
+        kw_df = pd.DataFrame(rows)
+
+        keyword_stats = []
+        for kw, group in kw_df.groupby('keyword'):
+            if len(group) < 2:  # skip keywords appearing in only 1 video
+                continue
+
+            relevant_trends = group['trend'].unique()
+            per_trend_peaks = []
+            per_trend_half_lives = []
+
+            for trend in relevant_trends:
+                trend_daily = self.daily_df[self.daily_df['trend_name'] == trend]
+                if trend_daily.empty:
+                    continue
+                video_count = len(group[group['trend'] == trend])
+                trend_peak = trend_daily['views'].max()
+                trend_half_life = len(trend_daily[trend_daily['views'] >= (trend_peak / 2)])
+
+                per_trend_peaks.extend([trend_peak] * video_count)
+                per_trend_half_lives.extend([trend_half_life] * video_count)
+
+            if not per_trend_peaks:
+                continue
+
+            keyword_stats.append({
+                'keyword': kw,
+                'frequency': len(group),
+                'trend_count': len(relevant_trends),
+                'peak_views': np.mean(per_trend_peaks),
+                'half_life': np.mean(per_trend_half_lives),
+                'total_engagement': group[['like_count', 'comment_count']].sum().sum()
+            })
+
+        return pd.DataFrame(keyword_stats)    
     
     def classify_trend_shape(self):
         """Cluster trends by shape"""
@@ -171,14 +203,20 @@ if __name__ == "__main__":
     print(features_df[['trend_name', 'shape_classification', 'peak_intensity', 
                        'growth_to_decay_ratio']].to_string())
     
-    # Analyze tags
-    tag_impact = engineer.analyze_tag_impact()
-    print("\n🏷️ Top Tags Impact:")
-    print(tag_impact.groupby('tag').agg({
-        'peak_views': 'mean',
-        'half_life': 'mean'
-    }).sort_values('peak_views', ascending=False).head(10))
+    # Analyze keywords
+    keyword_impact = engineer.analyze_keyword_impact()
+    print("\n🔑 Trend-Specific Keywords (appear in only 1 trend):")
+    print(keyword_impact[keyword_impact['trend_count'] == 1]
+        .sort_values('peak_views', ascending=False)
+        .head(10)[['keyword', 'trend_count', 'peak_views', 'half_life']]
+        .round(1).to_string())
+    
+    print("\n🔑 Cross-Trend Keywords (appear in 2+ trends):")
+    print(keyword_impact[keyword_impact['trend_count'] > 1]
+        .sort_values('frequency', ascending=False)
+        .head(10)[['keyword', 'trend_count', 'frequency', 'peak_views', 'half_life']]
+        .round(1).to_string())
     
     # Save features
     features_df.to_csv('data/processed/trend_features.csv', index=False)
-    tag_impact.to_csv('data/processed/tag_impact.csv', index=False)
+    keyword_impact.to_csv('data/processed/keyword_impact.csv', index=False)

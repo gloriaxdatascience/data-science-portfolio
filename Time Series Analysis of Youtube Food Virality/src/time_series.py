@@ -41,9 +41,15 @@ class TimeSeriesBuilder:
                 views_per_day = np.full(len(date_range), daily_views)
                 
             elif method == 'exponential':
-                # Early burst, then decay
+                # Give every video a slightly different decay rate based on its engagement!
+                # Higher engagement = slower decay (longer half-life)
+                engagement = (video['like_count'] + video['comment_count']) / video['view_count'] if video['view_count'] > 0 else 0
+                
+                # Randomly vary the base decay (0.05 to 0.15) so the bars aren't all the same
+                base_decay = np.random.uniform(0.05, 0.15)
+                decay_rate = base_decay * (1 / (1 + engagement)) # High engagement reduces decay
+                
                 days = np.arange(len(date_range))
-                decay_rate = 0.1
                 weights = np.exp(-decay_rate * days)
                 weights = weights / weights.sum()
                 views_per_day = video['view_count'] * weights
